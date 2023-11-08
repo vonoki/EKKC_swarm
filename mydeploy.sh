@@ -1,0 +1,337 @@
+#!/bin/bash
+
+
+function generateCA() {
+  echo -e "\e[32m[X]\e[0m Generating CA"
+
+  mkdir -p certs
+
+  #make a new key for the root ca
+  echo -e "\e[32m[X]\e[0m Making root Certificate Authority"
+  openssl genrsa -out certs/root-ca.key 4096
+
+  #make a cert signing request for this key
+  openssl req -new -key certs/root-ca.key -out certs/root-ca.csr -sha256 -subj "$CERT_STRING/CN=Swarm"
+
+  #Set openssl so that this root can only sign certs and not sign intermediates
+  {
+    echo "[root_ca]"
+    echo "basicConstraints = critical,CA:TRUE,pathlen:1"
+    echo "keyUsage = critical, nonRepudiation, cRLSign, keyCertSign"
+    echo "subjectKeyIdentifier=hash"
+  } >certs/root-ca.cnf
+
+  #sign the root ca
+  echo -e "\e[32m[X]\e[0m Signing root CA"
+  ##Generate the Certificate Authority (make sure your FQDN is localhost):
+  openssl x509 -req -days 3650 -in certs/root-ca.csr -signkey certs/root-ca.key -sha256 -out certs/root-ca.crt -extfile certs/root-ca.cnf -extensions root_ca
+}
+
+function generateelasticcert() {
+  ##elasticsearch server
+  #make a new key for elasticsearch
+  echo -e "\e[32m[X]\e[0m Making Elasticsearch certificate"
+  ##3. Generate a client certificate:
+  openssl genrsa -out certs/elasticsearch.key 4096 
+
+  #make a cert signing request for elasticsearch
+  ## 4. Generate a certificate signing request:
+  openssl req -new -key certs/elasticsearch.key -out certs/elasticsearch.csr -sha256 -subj "$CERT_STRING/CN=elasticsearch"
+
+  #set openssl so that this cert can only perform server auth and cannot sign certs
+  {
+    echo "[server]"
+    echo "authorityKeyIdentifier=keyid,issuer"
+    echo "basicConstraints = critical,CA:FALSE"
+    echo "extendedKeyUsage=serverAuth,clientAuth"
+    echo "keyUsage = critical, digitalSignature, keyEncipherment"
+    #echo "subjectAltName = DNS:elasticsearch, IP:127.0.0.1"
+    echo "subjectAltName = DNS:elasticsearch, IP:127.0.0.1, DNS:$logstashcn, IP: $logstaship"
+    echo "subjectKeyIdentifier=hash"
+  } >certs/elasticsearch.cnf
+
+  #sign the elasticsearchcert
+  echo -e "\e[32m[X]\e[0m Sign elasticsearch cert"
+  ## 5. Sign the request with the CA:
+  openssl x509 -req -days 750 -in certs/elasticsearch.csr -sha256 -CA certs/root-ca.crt -CAkey certs/root-ca.key -CAcreateserial -out certs/elasticsearch.crt -extfile certs/elasticsearch.cnf -extensions server
+  mv certs/elasticsearch.key certs/elasticsearch.key.pem && openssl pkcs8 -in certs/elasticsearch.key.pem -topk8 -nocrypt -out certs/elasticsearch.key
+}
+
+function generatekibanacert() {
+  ##kibana server
+  #make a new key for kibana
+  echo -e "\e[32m[X]\e[0m Making Kibana certificate"
+  openssl genrsa -out certs/kibana.key 4096
+
+  #make a cert signing request for kibana
+  openssl req -new -key certs/kibana.key -out certs/kibana.csr -sha256 -subj "$CERT_STRING/CN=kibana"
+
+  #set openssl so that this cert can only perform server auth and cannot sign certs
+  {
+    echo "[server]"
+    echo "authorityKeyIdentifier=keyid,issuer"
+    echo "basicConstraints = critical,CA:FALSE"
+    echo "extendedKeyUsage=serverAuth"
+    echo "keyUsage = critical, digitalSignature, keyEncipherment"
+    #echo "subjectAltName = DNS:$logstashcn, IP: $logstaship"
+    echo "subjectAltName = DNS:kibana, IP:127.0.0.1, DNS:$logstashcn, IP: $logstaship"
+    echo "subjectKeyIdentifier=hash"
+  } >certs/kibana.cnf
+
+  #sign the kibanacert
+  echo -e "\e[32m[X]\e[0m Sign kibana cert"
+  openssl x509 -req -days 750 -in certs/kibana.csr -sha256 -CA certs/root-ca.crt -CAkey certs/root-ca.key -CAcreateserial -out certs/kibana.crt -extfile certs/kibana.cnf -extensions server
+  mv certs/kibana.key certs/kibana.key.pem && openssl pkcs8 -in certs/kibana.key.pem -topk8 -nocrypt -out certs/kibana.key
+}
+
+function generateconnectcert() {
+  ##elasticsearch server
+  #make a new key for elasticsearch
+  echo -e "\e[32m[X]\e[0m Making connect certificate"
+  ##3. Generate a client certificate:
+  openssl genrsa -out certs/connect.key 4096 
+
+  #make a cert signing request for connect
+  ## 4. Generate a certificate signing request:
+  openssl req -new -key certs/connect.key -out certs/connect.csr -sha256 -subj "$CERT_STRING/CN=connect"
+
+  #set openssl so that this cert can only perform server auth and cannot sign certs
+  {
+    echo "[server]"
+    echo "authorityKeyIdentifier=keyid,issuer"
+    echo "basicConstraints = critical,CA:FALSE"
+    echo "extendedKeyUsage=serverAuth,clientAuth"
+    echo "keyUsage = critical, digitalSignature, keyEncipherment"
+    #echo "subjectAltName = DNS:elasticsearch, IP:127.0.0.1"
+    echo "subjectAltName = DNS:connect, IP:127.0.0.1, DNS:$logstashcn, IP: $logstaship"
+    echo "subjectKeyIdentifier=hash"
+  } >certs/connect.cnf
+
+  #sign the connectcert
+  echo -e "\e[32m[X]\e[0m Sign connect cert"
+  ## 5. Sign the request with the CA:
+  openssl x509 -req -days 750 -in certs/connect.csr -sha256 -CA certs/root-ca.crt -CAkey certs/root-ca.key -CAcreateserial -out certs/connect.crt -extfile certs/connect.cnf -extensions server
+  mv certs/connect.key certs/connect.key.pem && openssl pkcs8 -in certs/connect.key.pem -topk8 -nocrypt -out certs/connect.key
+}
+
+function initdockerswarm() {
+  echo -e "\e[32m[X]\e[0m Configuring Docker swarm"
+  docker swarm init --advertise-addr "$logstaship"
+  if [ "$?" == 1 ]; then
+    echo -e "\e[31m[!]\e[0m Failed to initialize docker swarm (Is $logstaship the correct IP address?) - exiting"
+    exit 1
+  fi
+}
+
+function populatecerts() {
+  #add to docker secrets
+  echo -e "\e[32m[X]\e[0m Adding certificates and keys to Docker"
+  #ca cert
+  docker secret create ca.crt certs/root-ca.crt
+  #elasticsearch server
+  docker secret create elasticsearch.key certs/elasticsearch.key
+  docker secret create elasticsearch.crt certs/elasticsearch.crt
+  #kibana server
+  docker secret create kibana.key certs/kibana.key
+  docker secret create kibana.crt certs/kibana.crt
+}
+
+function generatepasswords() {
+
+  elastic_user_pass=$(LC_ALL=C tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 32 | head -n 1)
+  kibana_system_pass=$(LC_ALL=C tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 32 | head -n 1)
+  es_sink_connector_pass=$(LC_ALL=C tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 32 | head -n 1)
+  kibanakey=$(LC_ALL=C tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 42 | head -n 1)
+}
+
+function configuredocker() {
+  sysctl -w vm.max_map_count=262144
+  SYSCTL_STATUS=$(grep vm.max_map_count /etc/sysctl.conf)
+  if [ "$SYSCTL_STATUS" == "vm.max_map_count=262144" ]; then
+    echo "SYSCTL already configured"
+  else
+    echo "vm.max_map_count=262144" >>/etc/sysctl.conf
+  fi
+
+  sed -i "s/insertkibanapasswordhere/$kibana_system_pass/g" /opt/EKK/docker-compose.yml
+
+  sed -i "s/kibanakey/$kibanakey/g" /opt/EKK/docker-compose.yml
+
+  sed -i "s/insertpublicurlhere/https:\/\/$logstashcn/g" /opt/EKK/docker-compose.yml
+}
+
+
+function deploylme() {
+  docker stack deploy EKK -c /opt/EKK/docker-compose.yml
+}
+
+function setroles() {
+  echo -e "\n\e[32m[X]\e[0m Setting es_sink_connector role"
+  curl --cacert certs/root-ca.crt --user "elastic:$elastic_user_pass" -X POST "https://127.0.0.1:9200/_security/role/es_sink_connector" -H 'Content-Type: application/json' -d'
+{
+  "indices": [
+    {
+      "names": [ "*" ],
+      "privileges": ["create_index", "read", "write", "view_index_metadata"]
+    }
+  ]
+}'
+}
+
+function setpasswords() {
+  temp="temp"
+
+  echo -e "\e[32m[X]\e[0m Waiting for elasticsearch to be ready"
+  while [[ "$(curl --cacert certs/root-ca.crt --user elastic:${temp} -s -o /dev/null -w ''%{http_code}'' https://127.0.0.1:9200)" != "200" ]]; do
+    sleep 1
+  done
+
+  echo -e "\e[32m[X]\e[0m Setting elastic user password"
+  curl --cacert certs/root-ca.crt --user elastic:${temp} -X POST "https://127.0.0.1:9200/_security/user/elastic/_password" -H 'Content-Type: application/json' -d' { "password" : "'"$elastic_user_pass"'"} '
+
+  echo -e "\n\e[32m[X]\e[0m Setting kibana system password"
+  curl --cacert certs/root-ca.crt --user "elastic:$elastic_user_pass" -X POST "https://127.0.0.1:9200/_security/user/kibana_system/_password" -H 'Content-Type: application/json' -d' { "password" : "'"$kibana_system_pass"'"} '
+  
+  setroles
+
+  echo -e "\n\e[32m[X]\e[0m Creating es_sink_connector user"
+  curl --cacert certs/root-ca.crt --user "elastic:$elastic_user_pass" -X POST "https://127.0.0.1:9200/_security/user/es_sink_connector" -H 'Content-Type: application/json' -d'
+{
+  "password" : "sink_writer",
+  "roles" : [ "es_sink_connector"],
+  "full_name" : "Sink Connector"
+  }
+'
+
+  echo -e "\n\e[32m[X]\e[0m Setting es_sink_connector password"
+  curl --cacert certs/root-ca.crt --user "elastic:$elastic_user_pass" -X POST "https://127.0.0.1:9200/_security/user/es_sink_connector/_password" -H 'Content-Type: application/json' -d' { "password" : "'"$es_sink_connector_pass"'"} '
+}
+
+function sink_certs() {
+
+echo -e "\n\e[32m[X]\e[0m Setting es_sink_connector certs"
+mkdir sink_certs
+openssl pkcs12 -export -out bundle.p12 -in certs/connect.crt -inkey certs/connect.key
+
+keytool -keystore truststore.jks -import -file certs/root-ca.crt -alias cacert
+
+keytool -destkeystore keystore.jks -importkeystore -srckeystore bundle.p12 -srcstoretype PKCS12
+
+mv truststore.jks sink_certs
+mv bundle.p12 sink_certs
+mv keystore.jks sink_certs
+}
+
+function configsink() {
+
+curl -X POST http://localhost:8083/connectors -H 'Content-Type: application/json' -d \
+'{
+  "name": "elasticsearch-sink",
+  "config": {
+    "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
+    "connection.url": "https://elasticsearch:9200",
+    "name": "elasticsearch-sink",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false"
+    "connection.username": "es_sink_connector",
+    "connection.password": "'"$es_sink_connector_pass"'",
+    "elastic.security.protocol": "SSL",
+    "elastic.https.ssl.keystore.location": "sink_certs/keystore.jks",
+    "elastic.https.ssl.keystore.password": "changeit",
+    "elastic.https.ssl.keystore.type": "JKS", 
+    "elastic.https.ssl.key.password": "changeit",
+    "elastic.https.ssl.truststore.location": "sink_certs/truststore.jks",
+    "elastic.https.ssl.truststore.password": "changeit",
+    "elastic.https.ssl.truststore.type": "JKS",
+    "elastic.https.ssl.protocol": "TLS"
+  }
+}'
+}
+
+
+function fixreadability() {
+ cd /opt/EKK/
+ chmod -077 -R .
+}
+
+function install() {
+  echo -e "Swarm config"
+  read -e -p "Proceed ([y]es/[n]o):" -i "y" check
+
+  if [ "$check" == "n" ]; then
+    return 1
+  fi
+
+  #move configs
+  echo -e "\e[31m[!]\e[0m Duplicationg config."
+  cp docker-compose-stack.yml docker-compose.yml
+
+  #get interface name of default route
+  DEFAULT_IF="$(route | grep '^default' | grep -o '[^ ]*$')"
+  #get ip of the interface
+  EXT_IP="$(/sbin/ifconfig "$DEFAULT_IF" | awk -F ' *|:' '/inet /{print $3}')"
+  read -e -p "Enter the IP of this Linux server: " -i "$EXT_IP" logstaship
+  read -e -p "Enter the Fully Qualified Domain Name (FQDN) of this Linux server. This needs to be resolvable from machines you want to communicate with: " logstashcn
+  read -e -p "This script will use self signed certificates for communication and encryption. Do you want to continue with self signed certificates? ([y]es/[n]o): " -i "y" selfsignedyn
+
+  #make certs
+  generateCA
+  generateelasticcert
+  generatekibanacert
+  generateconnectcert
+  sudo chmod -R a=rwx /opt/EKK/certs
+  
+  sink_certs
+  sudo chmod -R a=rwx /opt/EKK/sink_certs
+
+  initdockerswarm
+  populatecerts
+  generatepasswords
+  configuredocker
+
+  deploylme
+  setpasswords
+
+  #sink connect
+  configsink
+
+  #fix readability: 
+  #fixreadability
+
+  echo ""
+  echo "##################################################################################"
+  echo "## Kibana/Elasticsearch Credentials are (these will not be accessible again!)"
+  echo "##"
+  echo "## Web Interface login:"
+  echo "## elastic:$elastic_user_pass"
+  echo "##"
+  echo "## System Credentials"
+  echo "## kibana:$kibana_system_pass"
+  echo "##################################################################################"
+  echo ""
+}
+
+############
+#START HERE#
+############
+export CERT_STRING='/C=UA/ST=London/L=hyphy/O=EKK'
+
+#Check the script has the correct permissions to run
+if [ "$(id -u)" -ne 0 ]; then
+  echo -e "\e[31m[!]\e[0m This script must be run with root privileges"
+  exit 1
+fi
+
+#Check the install location
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+if [[ "$DIR" != "/opt/EKK" ]]; then
+  echo -e "\e[31m[!]\e[0m The deploy script is not currently within the correct path, please ensure that deploy.sh is located in /opt/EKK for installation"
+  exit 1
+fi
+
+#Change current working directory so relative filepaths work
+cd "$DIR" || exit
+
+if [ "$1" == "install" ]; then
+  install
+fi
