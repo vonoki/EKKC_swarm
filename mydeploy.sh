@@ -2,18 +2,13 @@
 
 
 function generateCA() {
-  echo -e "\e[32m[X]\e[0m Generating CA"
 
   mkdir -p certs
 
-  #make a new key for the root ca
-  echo -e "\e[32m[X]\e[0m Making root Certificate Authority"
   openssl genrsa -out certs/root-ca.key 4096
 
-  #make a cert signing request for this key
   openssl req -new -key certs/root-ca.key -out certs/root-ca.csr -sha256 -subj "$CERT_STRING/CN=Swarm"
 
-  #Set openssl so that this root can only sign certs and not sign intermediates
   {
     echo "[root_ca]"
     echo "basicConstraints = critical,CA:TRUE,pathlen:1"
@@ -21,24 +16,15 @@ function generateCA() {
     echo "subjectKeyIdentifier=hash"
   } >certs/root-ca.cnf
 
-  #sign the root ca
-  echo -e "\e[32m[X]\e[0m Signing root CA"
-  ##Generate the Certificate Authority (make sure your FQDN is localhost):
   openssl x509 -req -days 3650 -in certs/root-ca.csr -signkey certs/root-ca.key -sha256 -out certs/root-ca.crt -extfile certs/root-ca.cnf -extensions root_ca
 }
 
 function generateelasticcert() {
-  ##elasticsearch server
-  #make a new key for elasticsearch
-  echo -e "\e[32m[X]\e[0m Making Elasticsearch certificate"
-  ##3. Generate a client certificate:
+
   openssl genrsa -out certs/elasticsearch.key 4096 
 
-  #make a cert signing request for elasticsearch
-  ## 4. Generate a certificate signing request:
   openssl req -new -key certs/elasticsearch.key -out certs/elasticsearch.csr -sha256 -subj "$CERT_STRING/CN=elasticsearch"
 
-  #set openssl so that this cert can only perform server auth and cannot sign certs
   {
     echo "[server]"
     echo "authorityKeyIdentifier=keyid,issuer"
@@ -213,7 +199,7 @@ echo -e "\n\e[32m[X]\e[0m Setting es_sink_connector certs"
 mkdir sink_certs
 openssl pkcs12 -export -out bundle.p12 -in certs/connect.crt -inkey certs/connect.key
 
-keytool -keystore truststore.jks -import -file certs/root-ca.crt -alias cacert
+keytool -keystore truststore.jks -import -file certs/root-ca.crt -alias ekk
 
 keytool -destkeystore keystore.jks -importkeystore -srckeystore bundle.p12 -srcstoretype PKCS12
 
