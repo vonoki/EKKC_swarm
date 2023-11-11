@@ -79,7 +79,7 @@ function generateconnectcert() {
 
   #make a cert signing request for connect
   ## 4. Generate a certificate signing request:
-  openssl req -new -key certs/connect.key -out certs/connect.csr -sha256 -subj "$CERT_STRING/CN=connect"
+  openssl req -new -key certs/connect.key -out certs/connect.csr -sha256 -subj "$CERT_STRING/CN=kafka-connect"
 
   #set openssl so that this cert can only perform server auth and cannot sign certs
   {
@@ -199,7 +199,7 @@ echo -e "\n\e[32m[X]\e[0m Setting es_sink_connector certs"
 mkdir sink_certs
 openssl pkcs12 -export -out bundle.p12 -in certs/connect.crt -inkey certs/connect.key
 
-keytool -keystore truststore.jks -import -file certs/root-ca.crt -alias ekk
+keytool -keystore truststore.jks -import -file certs/root-ca.crt -alias EKK-root-ca
 
 keytool -destkeystore keystore.jks -importkeystore -srckeystore bundle.p12 -srcstoretype PKCS12
 

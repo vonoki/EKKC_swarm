@@ -67,13 +67,13 @@ services:
       CONNECT_SSL_KEYSTORE_LOCATION: /sink_certs/keystore.jks
       CONNECT_SSL_KEYSTORE_PASSWORD: changeit
       CONNECT_SSL_KEY_PASSWORD: changeit
-      CONNECT_SSL_TRUSTSTORE_LOCATION: /sink_certs/keystore.jks
+      CONNECT_SSL_TRUSTSTORE_LOCATION: /sink_certs/truststore.jks
       CONNECT_SSL_TRUSTSTORE_PASSWORD: changeit
       CONNECT_CONSUMER_SECURITY_PROTOCOL: 'SSL'
       CONNECT_CONSUMER_SSL_KEYSTORE_LOCATION: /sink_certs/keystore.jks
       CONNECT_CONSUMER_SSL_KEYSTORE_PASSWORD: changeit
       CONNECT_CONSUMER_SSL_KEY_PASSWORD: changeit
-      CONNECT_CONSUMER_SSL_TRUSTSTORE_LOCATION: /sink_certs/keystore.jks
+      CONNECT_CONSUMER_SSL_TRUSTSTORE_LOCATION: /sink_certs/truststore.jks
       CONNECT_CONSUMER_SSL_TRUSTSTORE_PASSWORD: changeit
     #command: /bin/bash -c "cp -r /run/secrets /usr/share/elasticsearch/config/certificates && /usr/local/bin/docker-entrypoint.sh eswrapper"
     volumes:
