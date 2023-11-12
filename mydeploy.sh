@@ -202,7 +202,7 @@ openssl pkcs12 -export -out broker.p12 -in certs/broker.crt -inkey certs/broker.
 
 keytool -destkeystore broker_keystore.jks -importkeystore -srckeystore broker.p12 -srcstoretype PKCS12
 
-keytool -keystore broekr_truststore.jks -import -file certs/root-ca.crt -alias EKK-root-ca
+keytool -keystore broker_truststore.jks -import -file certs/root-ca.crt -alias EKK-root-ca
 
 mv broker_truststore.jks broker_certs
 mv broker.p12 broker_certs
