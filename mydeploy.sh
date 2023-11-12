@@ -281,7 +281,7 @@ function install() {
   sudo chmod -R a=rwx /opt/EKK/certs
   sink_certs
   sudo chmod -R a=rwx /opt/EKK/sink_certs
-  broker_cert
+  broker_certs
   sudo chmod -R a=rwx /opt/EKK/broker_certs
 
   initdockerswarm
