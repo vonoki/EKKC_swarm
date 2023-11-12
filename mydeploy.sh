@@ -6,8 +6,7 @@ function generateCA() {
   mkdir -p certs
 
   openssl genrsa -out certs/root-ca.key 4096
-
-  openssl req -new -key certs/root-ca.key -out certs/root-ca.csr -sha256 -subj "$CERT_STRING/CN=Swarm"
+  openssl req -new -key certs/root-ca.key -out certs/root-ca.csr -sha256 -subj "$CERT_STRING/CN=EKK"
 
   {
     echo "[root_ca]"
@@ -36,23 +35,16 @@ function generateelasticcert() {
     echo "subjectKeyIdentifier=hash"
   } >certs/elasticsearch.cnf
 
-  #sign the elasticsearchcert
-  echo -e "\e[32m[X]\e[0m Sign elasticsearch cert"
-  ## 5. Sign the request with the CA:
   openssl x509 -req -days 750 -in certs/elasticsearch.csr -sha256 -CA certs/root-ca.crt -CAkey certs/root-ca.key -CAcreateserial -out certs/elasticsearch.crt -extfile certs/elasticsearch.cnf -extensions server
   mv certs/elasticsearch.key certs/elasticsearch.key.pem && openssl pkcs8 -in certs/elasticsearch.key.pem -topk8 -nocrypt -out certs/elasticsearch.key
 }
 
 function generatekibanacert() {
-  ##kibana server
-  #make a new key for kibana
-  echo -e "\e[32m[X]\e[0m Making Kibana certificate"
+
   openssl genrsa -out certs/kibana.key 4096
 
-  #make a cert signing request for kibana
   openssl req -new -key certs/kibana.key -out certs/kibana.csr -sha256 -subj "$CERT_STRING/CN=kibana"
 
-  #set openssl so that this cert can only perform server auth and cannot sign certs
   {
     echo "[server]"
     echo "authorityKeyIdentifier=keyid,issuer"
@@ -64,24 +56,16 @@ function generatekibanacert() {
     echo "subjectKeyIdentifier=hash"
   } >certs/kibana.cnf
 
-  #sign the kibanacert
-  echo -e "\e[32m[X]\e[0m Sign kibana cert"
   openssl x509 -req -days 750 -in certs/kibana.csr -sha256 -CA certs/root-ca.crt -CAkey certs/root-ca.key -CAcreateserial -out certs/kibana.crt -extfile certs/kibana.cnf -extensions server
   mv certs/kibana.key certs/kibana.key.pem && openssl pkcs8 -in certs/kibana.key.pem -topk8 -nocrypt -out certs/kibana.key
 }
 
-function generateconnectcert() {
-  ##elasticsearch server
-  #make a new key for elasticsearch
-  echo -e "\e[32m[X]\e[0m Making connect certificate"
-  ##3. Generate a client certificate:
-  openssl genrsa -out certs/connect.key 4096 
+function generatebrokercert() {
 
-  #make a cert signing request for connect
-  ## 4. Generate a certificate signing request:
-  openssl req -new -key certs/connect.key -out certs/connect.csr -sha256 -subj "$CERT_STRING/CN=kafka-connect"
+  openssl genrsa -out certs/broker.key 4096 
 
-  #set openssl so that this cert can only perform server auth and cannot sign certs
+  openssl req -new -key certs/broker.key -out certs/broker.csr -sha256 -subj "$CERT_STRING/CN=broker"
+
   {
     echo "[server]"
     echo "authorityKeyIdentifier=keyid,issuer"
@@ -89,13 +73,31 @@ function generateconnectcert() {
     echo "extendedKeyUsage=serverAuth,clientAuth"
     echo "keyUsage = critical, digitalSignature, keyEncipherment"
     #echo "subjectAltName = DNS:elasticsearch, IP:127.0.0.1"
-    echo "subjectAltName = DNS:connect, IP:127.0.0.1, DNS:$logstashcn, IP: $logstaship"
+    echo "subjectAltName = DNS:broker, IP:127.0.0.1, DNS:$logstashcn, IP: $logstaship"
+    echo "subjectKeyIdentifier=hash"
+  } >certs/broker.cnf
+
+  openssl x509 -req -days 750 -in certs/broker.csr -sha256 -CA certs/root-ca.crt -CAkey certs/root-ca.key -CAcreateserial -out certs/broker.crt -extfile certs/broker.cnf -extensions server
+  mv certs/broker.key certs/broker.key.pem && openssl pkcs8 -in certs/broker.key.pem -topk8 -nocrypt -out certs/broker.key
+}
+
+function generateconnectcert() {
+
+  openssl genrsa -out certs/connect.key 4096 
+
+  openssl req -new -key certs/connect.key -out certs/connect.csr -sha256 -subj "$CERT_STRING/CN=kafka-connect"
+
+  {
+    echo "[server]"
+    echo "authorityKeyIdentifier=keyid,issuer"
+    echo "basicConstraints = critical,CA:FALSE"
+    echo "extendedKeyUsage=serverAuth,clientAuth"
+    echo "keyUsage = critical, digitalSignature, keyEncipherment"
+    #echo "subjectAltName = DNS:elasticsearch, IP:127.0.0.1"
+    echo "subjectAltName = DNS:kafka-connect, IP:127.0.0.1, DNS:$logstashcn, IP: $logstaship"
     echo "subjectKeyIdentifier=hash"
   } >certs/connect.cnf
 
-  #sign the connectcert
-  echo -e "\e[32m[X]\e[0m Sign connect cert"
-  ## 5. Sign the request with the CA:
   openssl x509 -req -days 750 -in certs/connect.csr -sha256 -CA certs/root-ca.crt -CAkey certs/root-ca.key -CAcreateserial -out certs/connect.crt -extfile certs/connect.cnf -extensions server
   mv certs/connect.key certs/connect.key.pem && openssl pkcs8 -in certs/connect.key.pem -topk8 -nocrypt -out certs/connect.key
 }
@@ -193,24 +195,39 @@ function setpasswords() {
   curl --cacert certs/root-ca.crt --user "elastic:$elastic_user_pass" -X POST "https://127.0.0.1:9200/_security/user/es_sink_connector/_password" -H 'Content-Type: application/json' -d' { "password" : "'"$es_sink_connector_pass"'"} '
 }
 
+function broker_certs() {
+
+mkdir broker_certs
+openssl pkcs12 -export -out broker.p12 -in certs/broker.crt -inkey certs/broker.key
+
+keytool -destkeystore broker_keystore.jks -importkeystore -srckeystore broker.p12 -srcstoretype PKCS12
+
+keytool -keystore broekr_truststore.jks -import -file certs/root-ca.crt -alias EKK-root-ca
+
+mv broker_truststore.jks broker_certs
+mv broker.p12 broker_certs
+mv broker_keystore.jks broker_certs
+
+}
+
 function sink_certs() {
 
-echo -e "\n\e[32m[X]\e[0m Setting es_sink_connector certs"
 mkdir sink_certs
-openssl pkcs12 -export -out bundle.p12 -in certs/connect.crt -inkey certs/connect.key
+openssl pkcs12 -export -out connect.p12 -in certs/connect.crt -inkey certs/connect.key
 
-keytool -keystore truststore.jks -import -file certs/root-ca.crt -alias EKK-root-ca
+keytool -destkeystore connect_keystore.jks -importkeystore -srckeystore connect.p12 -srcstoretype PKCS12
 
-keytool -destkeystore keystore.jks -importkeystore -srckeystore bundle.p12 -srcstoretype PKCS12
+keytool -keystore connect_truststore.jks -import -file certs/root-ca.crt -alias EKK-root-ca
 
-mv truststore.jks sink_certs
-mv bundle.p12 sink_certs
-mv keystore.jks sink_certs
+mv connect_truststore.jks sink_certs
+mv connect.p12 sink_certs
+mv connect_keystore.jks sink_certs
+
 }
 
 function configsink() {
 
-curl -X POST http://localhost:8083/connectors -H 'Content-Type: application/json' -d \
+curl -X POST https://localhost:8083/connectors -H 'Content-Type: application/json' -d \
 '{
   "name": "elasticsearch-sink",
   "config": {
@@ -222,11 +239,11 @@ curl -X POST http://localhost:8083/connectors -H 'Content-Type: application/json
     "connection.username": "es_sink_connector",
     "connection.password": "'"$es_sink_connector_pass"'",
     "elastic.security.protocol": "SSL",
-    "elastic.https.ssl.keystore.location": "sink_certs/keystore.jks",
+    "elastic.https.ssl.keystore.location": "sink_certs/connect_keystore.jks",
     "elastic.https.ssl.keystore.password": "changeit",
     "elastic.https.ssl.keystore.type": "JKS", 
     "elastic.https.ssl.key.password": "changeit",
-    "elastic.https.ssl.truststore.location": "sink_certs/truststore.jks",
+    "elastic.https.ssl.truststore.location": "sink_certs/connect_truststore.jks",
     "elastic.https.ssl.truststore.password": "changeit",
     "elastic.https.ssl.truststore.type": "JKS",
     "elastic.https.ssl.protocol": "TLS"
@@ -234,11 +251,6 @@ curl -X POST http://localhost:8083/connectors -H 'Content-Type: application/json
 }'
 }
 
-
-function fixreadability() {
- cd /opt/EKK/
- chmod -077 -R .
-}
 
 function install() {
   echo -e "Swarm config"
@@ -265,10 +277,12 @@ function install() {
   generateelasticcert
   generatekibanacert
   generateconnectcert
+  generatebrokercert
   sudo chmod -R a=rwx /opt/EKK/certs
-  
   sink_certs
   sudo chmod -R a=rwx /opt/EKK/sink_certs
+  broker_cert
+  sudo chmod -R a=rwx /opt/EKK/broker_certs
 
   initdockerswarm
   populatecerts
@@ -300,7 +314,7 @@ function install() {
 ############
 #START HERE#
 ############
-export CERT_STRING='/C=UA/ST=London/L=hyphy/O=EKK'
+export CERT_STRING='/C=UA/ST=Khm/L=Hyphy/O=Digital'
 
 #Check the script has the correct permissions to run
 if [ "$(id -u)" -ne 0 ]; then

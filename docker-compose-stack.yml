@@ -18,6 +18,10 @@ services:
     hostname: broker
     depends_on:
       - zookeeper
+    volumes:
+      - type: bind
+        source: /opt/EKK/broker_certs
+        target: /broker_certs
     networks:
       - esnet
     ports:
@@ -25,12 +29,18 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:9092,PLAINTEXT_HOST://192.168.136.133:29092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: DOC_listener://broker:9092,Out_listener://192.168.136.133:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: DOC_listener:PLAINTEXT,Out_listener:SSL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_SSL_KEYSTORE_FILENAME: /broker_certs/broker_keystore.jks
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: changeit
+      KAFKA_SSL_KEY_CREDENTIALS: changeit
+      KAFKA_SSL_TRUSTSTORE_FILENAME: /broker_certs/broker_truststore.jks
+      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: changeit
+      
 
 
   kafka-connect:
@@ -64,16 +74,16 @@ services:
       CONNECT_LOG4J_LOGGERS: org.reflections=ERROR
       CLASSPATH: /usr/share/java/monitoring-interceptors/monitoring-interceptors-3.3.0.jar
       CONNECT_SECURITY_PROTOCOL: SSL
-      CONNECT_SSL_KEYSTORE_LOCATION: /sink_certs/keystore.jks
+      CONNECT_SSL_KEYSTORE_LOCATION: /sink_certs/connect_keystore.jks
       CONNECT_SSL_KEYSTORE_PASSWORD: changeit
       CONNECT_SSL_KEY_PASSWORD: changeit
-      CONNECT_SSL_TRUSTSTORE_LOCATION: /sink_certs/truststore.jks
+      CONNECT_SSL_TRUSTSTORE_LOCATION: /sink_certs/connect_truststore.jks
       CONNECT_SSL_TRUSTSTORE_PASSWORD: changeit
-      CONNECT_CONSUMER_SECURITY_PROTOCOL: 'SSL'
-      CONNECT_CONSUMER_SSL_KEYSTORE_LOCATION: /sink_certs/keystore.jks
+      CONNECT_CONSUMER_SECURITY_PROTOCOL: SSL
+      CONNECT_CONSUMER_SSL_KEYSTORE_LOCATION: /sink_certs/connect_keystore.jks
       CONNECT_CONSUMER_SSL_KEYSTORE_PASSWORD: changeit
       CONNECT_CONSUMER_SSL_KEY_PASSWORD: changeit
-      CONNECT_CONSUMER_SSL_TRUSTSTORE_LOCATION: /sink_certs/truststore.jks
+      CONNECT_CONSUMER_SSL_TRUSTSTORE_LOCATION: /sink_certs/connect_truststore.jks
       CONNECT_CONSUMER_SSL_TRUSTSTORE_PASSWORD: changeit
     #command: /bin/bash -c "cp -r /run/secrets /usr/share/elasticsearch/config/certificates && /usr/local/bin/docker-entrypoint.sh eswrapper"
     volumes:
