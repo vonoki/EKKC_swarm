@@ -83,9 +83,9 @@ function generateconnectcert() {
 
   keytool -keystore certs/connect.truststore.jks -import -file certs/root-ca.crt -alias EKK-root-ca -storepass changeit -noprompt
 
-  openssl pkcs12 -export -out connect.p12 -in certs/connect.crt -inkey certs/connect.key
+  openssl pkcs12 -export -out certs/connect.p12 -in certs/connect.crt -inkey certs/connect.key -pass changeit
 
-  keytool -destkeystore certs/connect.keystore.jks -importkeystore -srckeystore certs/connect.p12 -srcstoretype PKCS12
+  keytool -destkeystore certs/connect.keystore.jks -importkeystore -srckeystore certs/connect.p12 -srcstoretype PKCS12 -storepass changeit -noprompt
 }
 
 function generatebrokercert() {
