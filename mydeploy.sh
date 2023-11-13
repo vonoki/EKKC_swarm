@@ -92,6 +92,7 @@ function generateconnectcert() {
 function generatebrokercert() {
 
   mkdir broker_certs
+  
   keytool -keystore broker_certs/broker.truststore.jks -import -file certs/root-ca.crt -alias ekk-root-ca -storepass changeit -noprompt
 
   keytool -keystore broker_certs/broker.keystore.jks -alias broker -keyalg RSA -validity 365 -genkey -storepass changeit -keypass changeit -dname "C=UA,ST=Khm,L=Hyphy,O=Digital,CN=broker" -ext SAN=DNS:broker
