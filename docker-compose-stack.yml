@@ -16,17 +16,6 @@ services:
   broker:
     image: confluentinc/cp-kafka:7.5.1
     hostname: broker
-    depends_on:
-      - zookeeper
-    networks:
-      - esnet
-    ports:
-      - 9092:9092
-      - 29092:29092
-    secrets:
-      - broker_keystore.jks
-      - broker_truststore.jks
-    command: /bin/bash -c "cp -r /run/secrets /etc/kafka/secrets"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -37,18 +26,27 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_SSL_KEYSTORE_FILENAME: /etc/kafka/secrets/broker_keystore.jks
+      KAFKA_SSL_KEYSTORE_FILENAME: /certs/broker_keystore.jks
       KAFKA_SSL_KEYSTORE_CREDENTIALS: changeit
       KAFKA_SSL_KEY_CREDENTIALS: changeit
-      KAFKA_SSL_TRUSTSTORE_FILENAME: /etc/kafka/secrets/broker_truststore.jks
+      KAFKA_SSL_TRUSTSTORE_FILENAME: /certs/broker_truststore.jks
       KAFKA_SSL_TRUSTSTORE_CREDENTIALS: changeit
       #KAFKA_MESSAGE_MAX_BYTES: 400000000
       #KAFKA_SOCKET_REQUEST_MAX_BYTES: 400001200
+    command: /bin/bash -c "cp -r /run/secrets /certs"
+    depends_on:
+      - zookeeper
+    networks:
+      - esnet
+    ports:
+      - 9092:9092
+      - 29092:29092
+    secrets:
+      - broker_keystore.jks
+      - broker_truststore.jks
     
 
-      
-
-
+    
   kafka-connect:
     image: confluentinc/cp-kafka-connect:7.5.1
     environment:
@@ -91,7 +89,6 @@ services:
       CONNECT_CONSUMER_SSL_KEY_PASSWORD: changeit
       CONNECT_CONSUMER_SSL_TRUSTSTORE_LOCATION: /connect_certs/connect.truststore.jks
       CONNECT_CONSUMER_SSL_TRUSTSTORE_PASSWORD: changeit
-    #command: /bin/bash -c "cp -r /run/secrets /usr/share/elasticsearch/config/certificates && /usr/local/bin/docker-entrypoint.sh eswrapper"
     volumes:
       - type: bind
         source: /opt/EKK/connect-plugins
