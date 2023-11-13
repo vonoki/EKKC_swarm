@@ -77,7 +77,7 @@ function generateconnectcert() {
     #echo "subjectAltName = DNS:kafka-connect, IP:127.0.0.1"
     echo "subjectAltName = DNS:kafka-connect, IP:127.0.0.1, DNS:$logstashcn, IP: $logstaship"
     echo "subjectKeyIdentifier=hash"
-  } >certs/connect.cnf
+  } >connect_certs/connect.cnf
 
   openssl x509 -req -days 750 -in connect_certs/connect.csr -CA certs/root-ca.crt -CAkey certs/root-ca.key -CAcreateserial -out connect_certs/connect.crt -extfile connect_certs/connect.cnf -extensions server
   mv connect_certs/connect.key connect_certs/connect.key.pem && openssl pkcs8 -in connect_certs/connect.key.pem -topk8 -nocrypt -out connect_certs/connect.key
