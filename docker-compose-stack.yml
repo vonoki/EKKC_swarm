@@ -33,27 +33,17 @@ services:
       KAFKA_SSL_TRUSTSTORE_CREDENTIALS: changeit
       #KAFKA_MESSAGE_MAX_BYTES: 400000000
       #KAFKA_SOCKET_REQUEST_MAX_BYTES: 400001200
-    command: /bin/bash -c "cp -r /run/secrets /etc/kafka/secrets"
     depends_on:
       - zookeeper
     networks:
       - esnet
     volumes:
-    - type: volume
-      source: broker-data
-      target: /var/lib/kafka/data
-    - type: volume
-      source: broker-certs
-      target: /etc/kafka/secrets
+      - /opt/EKK/broker_certs:/etc/kafka/secrets
     ports:
       - 9092:9092
       - 29092:29092
-    secrets:
-      - broker_keystore.jks
-      - broker_truststore.jks
-    
 
-    
+
   kafka-connect:
     image: confluentinc/cp-kafka-connect:7.5.1
     environment:
@@ -216,17 +206,9 @@ secrets:
     external: true
   kibana.key:
     external: true
-  broker_keystore.jks:
-    external: true
-  broker_truststore.jks:
-    external: true
 
 volumes:
   esdata:
-    driver: local
-  broker-data:
-    driver: local
-  broker-certs:
     driver: local
 
 networks:
