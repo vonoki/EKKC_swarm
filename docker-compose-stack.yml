@@ -27,6 +27,10 @@ services:
     ports:
       - 9092:9092
       - 29092:29092
+    secrets:
+      - broker_keystore.jks
+      - broker_truststore.jks
+    command: /bin/bash -c "cp -r /run/secrets /etc/kafka/secrets"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -37,13 +41,15 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_SSL_KEYSTORE_FILENAME: /broker_certs/broker_keystore.jks
+      KAFKA_SSL_KEYSTORE_FILENAME: /etc/kafka/secrets/broker_keystore.jks
       KAFKA_SSL_KEYSTORE_CREDENTIALS: changeit
       KAFKA_SSL_KEY_CREDENTIALS: changeit
-      KAFKA_SSL_TRUSTSTORE_FILENAME: /broker_certs/broker_truststore.jks
+      KAFKA_SSL_TRUSTSTORE_FILENAME: /etc/kafka/secrets/broker_truststore.jks
       KAFKA_SSL_TRUSTSTORE_CREDENTIALS: changeit
       #KAFKA_MESSAGE_MAX_BYTES: 400000000
       #KAFKA_SOCKET_REQUEST_MAX_BYTES: 400001200
+    
+
       
 
 
@@ -209,6 +215,10 @@ secrets:
   kibana.crt:
     external: true
   kibana.key:
+    external: true
+  broker_keystore.jks:
+    external: true
+  broker_truststore.jks:
     external: true
 
 volumes:

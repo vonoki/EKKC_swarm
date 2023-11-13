@@ -121,12 +121,18 @@ function populatecerts() {
   echo -e "\e[32m[X]\e[0m Adding certificates and keys to Docker"
   #ca cert
   docker secret create ca.crt certs/root-ca.crt
+
   #elasticsearch server
   docker secret create elasticsearch.key certs/elasticsearch.key
   docker secret create elasticsearch.crt certs/elasticsearch.crt
+
   #kibana server
   docker secret create kibana.key certs/kibana.key
   docker secret create kibana.crt certs/kibana.crt
+
+  #kafka broker
+  docker secret create broker_truststore.jks broker_certs/broker_truststore.jks
+  docker secret create broker_keystore.jks broker_certs/broker_keystore.jks
 }
 
 function generatepasswords() {
