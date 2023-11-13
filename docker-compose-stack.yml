@@ -26,18 +26,25 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_SSL_KEYSTORE_FILENAME: /home/appuser/certs/broker_keystore.jks
+      KAFKA_SSL_KEYSTORE_FILENAME: /etc/kafka/secrets/broker_keystore.jks
       KAFKA_SSL_KEYSTORE_CREDENTIALS: changeit
       KAFKA_SSL_KEY_CREDENTIALS: changeit
-      KAFKA_SSL_TRUSTSTORE_FILENAME: /home/appuser/certs/broker_truststore.jks
+      KAFKA_SSL_TRUSTSTORE_FILENAME: /etc/kafka/secrets/broker_truststore.jks
       KAFKA_SSL_TRUSTSTORE_CREDENTIALS: changeit
       #KAFKA_MESSAGE_MAX_BYTES: 400000000
       #KAFKA_SOCKET_REQUEST_MAX_BYTES: 400001200
-    command: /bin/bash -c "cp -r /run/secrets /home/appuser/certs"
+    command: /bin/bash -c "cp -r /run/secrets /etc/kafka/secrets"
     depends_on:
       - zookeeper
     networks:
       - esnet
+    volumes:
+    - type: volume
+      source: broker-data
+      target: /var/lib/kafka/data
+    - type: volume
+      source: broker-certs
+      target: /etc/kafka/secrets
     ports:
       - 9092:9092
       - 29092:29092
