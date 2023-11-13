@@ -92,6 +92,7 @@ function generateconnectcert() {
 function generatebrokercert() {
 
   mkdir broker_certs
+  mkdir broker_data
 
   keytool -keystore broker_certs/broker_truststore.jks -import -file certs/root-ca.crt -alias ekk-root-ca -storepass changeit -noprompt
 
@@ -258,7 +259,7 @@ function install() {
   sudo chmod -R a=rwx /opt/EKK/connect_certs
   generatebrokercert
   sudo chmod -R a=rwx /opt/EKK/broker_certs
-
+  sudo chmod -R a=rwx /opt/EKK/broker_data
 
   initdockerswarm
   populatecerts

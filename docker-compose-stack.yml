@@ -39,6 +39,7 @@ services:
       - esnet
     volumes:
       - /opt/EKK/broker_certs:/etc/kafka/secrets
+      - /opt/EKK/broker_data:/var/lib/kafka/data
     ports:
       - 9092:9092
       - 29092:29092
