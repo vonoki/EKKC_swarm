@@ -63,9 +63,10 @@ function generatekibanacert() {
 
 function generateconnectcert() {
 
-  openssl genrsa -out certs/connect.key
+  mkdir connect_certs
+  openssl genrsa -out connect_certs/connect.key
 
-  openssl req -new -key certs/connect.key -out certs/connect.csr -subj "$CERT_STRING/CN=kafka-connect"
+  openssl req -new -key connect_certs/connect.key -out connect_certs/connect.csr -subj "$CERT_STRING/CN=kafka-connect"
 
   {
     echo "[server]"
@@ -78,29 +79,30 @@ function generateconnectcert() {
     echo "subjectKeyIdentifier=hash"
   } >certs/connect.cnf
 
-  openssl x509 -req -days 750 -in certs/connect.csr -CA certs/root-ca.crt -CAkey certs/root-ca.key -CAcreateserial -out certs/connect.crt -extfile certs/connect.cnf -extensions server
-  mv certs/connect.key certs/connect.key.pem && openssl pkcs8 -in certs/connect.key.pem -topk8 -nocrypt -out certs/connect.key
+  openssl x509 -req -days 750 -in connect_certs/connect.csr -CA certs/root-ca.crt -CAkey certs/root-ca.key -CAcreateserial -out connect_certs/connect.crt -extfile connect_certs/connect.cnf -extensions server
+  mv connect_certs/connect.key connect_certs/connect.key.pem && openssl pkcs8 -in connect_certs/connect.key.pem -topk8 -nocrypt -out connect_certs/connect.key
 
-  keytool -keystore certs/connect.truststore.jks -import -file certs/root-ca.crt -alias EKK-root-ca -storepass changeit -noprompt
+  keytool -keystore connect_certs/connect.truststore.jks -import -file certs/root-ca.crt -alias EKK-root-ca -storepass changeit -noprompt
 
-  openssl pkcs12 -export -out certs/connect.p12 -in certs/connect.crt -inkey certs/connect.key
+  openssl pkcs12 -export -out connect_certs/connect.p12 -in connect_certs/connect.crt -inkey connect_certs/connect.key
 
-  keytool -destkeystore certs/connect.keystore.jks -importkeystore -srckeystore certs/connect.p12 -srcstoretype PKCS12
+  keytool -destkeystore connect_certs/connect.keystore.jks -importkeystore -srckeystore connect_certs/connect.p12 -srcstoretype PKCS12
 }
 
 function generatebrokercert() {
 
-  keytool -keystore certs/broker.truststore.jks -import -file certs/root-ca.crt -alias ekk-root-ca -storepass changeit -noprompt
+  mkdir broker_certs
+  keytool -keystore broker_certs/broker.truststore.jks -import -file certs/root-ca.crt -alias ekk-root-ca -storepass changeit -noprompt
 
-  keytool -keystore certs/broker.keystore.jks -alias broker -keyalg RSA -validity 365 -genkey -storepass changeit -keypass changeit -dname "C=UA,ST=Khm,L=Hyphy,O=Digital,CN=broker" -ext SAN=DNS:broker
+  keytool -keystore broker_certs/broker.keystore.jks -alias broker -keyalg RSA -validity 365 -genkey -storepass changeit -keypass changeit -dname "C=UA,ST=Khm,L=Hyphy,O=Digital,CN=broker" -ext SAN=DNS:broker
 
-  keytool -keystore certs/broker.keystore.jks -alias broker -certreq -file certs/broker-unsigned.crt -storepass changeit -noprompt
+  keytool -keystore broker_certs/broker.keystore.jks -alias broker -certreq -file broker_certs/broker-unsigned.crt -storepass changeit -noprompt
 
-  openssl x509 -req -CA certs/root-ca.crt -CAkey certs/root-ca.key -in certs/broker-unsigned.crt -out certs/broker.crt -days 365 -CAcreateserial -passin pass:changeit
+  openssl x509 -req -CA certs/root-ca.crt -CAkey certs/root-ca.key -in broker_certs/broker-unsigned.crt -out broker_certs/broker.crt -days 365 -CAcreateserial -passin pass:changeit
 
-  keytool -keystore certs/broker.keystore.jks -alias ekk-root-ca -importcert -file certs/root-ca.crt -storepass changeit -noprompt
+  keytool -keystore broker_certs/broker.keystore.jks -alias ekk-root-ca -importcert -file certs/root-ca.crt -storepass changeit -noprompt
 
-  keytool -keystore certs/broker.keystore.jks -alias broker -importcert -file certs/broker.crt -storepass changeit -noprompt
+  keytool -keystore broker_certs/broker.keystore.jks -alias broker -importcert -file broker_certs/broker.crt -storepass changeit -noprompt
 
 }
 
@@ -248,10 +250,12 @@ function install() {
   generateCA
   generateelasticcert
   generatekibanacert
-  generateconnectcert
-  generatebrokercert
-
   sudo chmod -R a=rwx /opt/EKK/certs
+  generateconnectcert
+  sudo chmod -R a=rwx /opt/EKK/connect_certs
+  generatebrokercert
+  sudo chmod -R a=rwx /opt/EKK/broker_certs
+
 
   initdockerswarm
   populatecerts

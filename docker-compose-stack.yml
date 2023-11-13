@@ -20,8 +20,8 @@ services:
       - zookeeper
     volumes:
       - type: bind
-        source: /opt/EKK/certs
-        target: /certs
+        source: /opt/EKK/broker_certs
+        target: /broker_certs
     networks:
       - esnet
     ports:
@@ -37,10 +37,10 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_SSL_KEYSTORE_FILENAME: /certs/broker.keystore.jks
+      KAFKA_SSL_KEYSTORE_FILENAME: /broker_certs/broker.keystore.jks
       KAFKA_SSL_KEYSTORE_CREDENTIALS: changeit
       KAFKA_SSL_KEY_CREDENTIALS: changeit
-      KAFKA_SSL_TRUSTSTORE_FILENAME: /certs/broker.truststore.jks
+      KAFKA_SSL_TRUSTSTORE_FILENAME: /broker_certs/broker.truststore.jks
       KAFKA_SSL_TRUSTSTORE_CREDENTIALS: changeit
       #KAFKA_MESSAGE_MAX_BYTES: 400000000
       #KAFKA_SOCKET_REQUEST_MAX_BYTES: 400001200
@@ -78,16 +78,16 @@ services:
       CONNECT_LOG4J_LOGGERS: org.reflections=ERROR
       CLASSPATH: /usr/share/java/monitoring-interceptors/monitoring-interceptors-3.3.0.jar
       CONNECT_SECURITY_PROTOCOL: SSL
-      CONNECT_SSL_KEYSTORE_LOCATION: /certs/connect.keystore.jks
+      CONNECT_SSL_KEYSTORE_LOCATION: /connect_certs/connect.keystore.jks
       CONNECT_SSL_KEYSTORE_PASSWORD: changeit
       CONNECT_SSL_KEY_PASSWORD: changeit
-      CONNECT_SSL_TRUSTSTORE_LOCATION: /certs/connect.truststore.jks
+      CONNECT_SSL_TRUSTSTORE_LOCATION: /connect_certs/connect.truststore.jks
       CONNECT_SSL_TRUSTSTORE_PASSWORD: changeit
       CONNECT_CONSUMER_SECURITY_PROTOCOL: SSL
-      CONNECT_CONSUMER_SSL_KEYSTORE_LOCATION: /certs/connect.keystore.jks
+      CONNECT_CONSUMER_SSL_KEYSTORE_LOCATION: /connect_certs/connect.keystore.jks
       CONNECT_CONSUMER_SSL_KEYSTORE_PASSWORD: changeit
       CONNECT_CONSUMER_SSL_KEY_PASSWORD: changeit
-      CONNECT_CONSUMER_SSL_TRUSTSTORE_LOCATION: /certs/connect.truststore.jks
+      CONNECT_CONSUMER_SSL_TRUSTSTORE_LOCATION: /connect_certs/connect.truststore.jks
       CONNECT_CONSUMER_SSL_TRUSTSTORE_PASSWORD: changeit
     #command: /bin/bash -c "cp -r /run/secrets /usr/share/elasticsearch/config/certificates && /usr/local/bin/docker-entrypoint.sh eswrapper"
     volumes:
@@ -95,8 +95,8 @@ services:
         source: /opt/EKK/connect-plugins
         target: /connect-plugins
       - type: bind
-        source: /opt/EKK/certs
-        target: /certs
+        source: /opt/EKK/connect_certs
+        target: /connect_certs
     networks:
       - esnet
     ports:
