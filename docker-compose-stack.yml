@@ -224,6 +224,10 @@ secrets:
 volumes:
   esdata:
     driver: local
+  broker-data:
+    driver: local
+  broker-certs:
+    driver: local
 
 networks:
   esnet:
