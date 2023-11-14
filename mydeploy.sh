@@ -106,6 +106,9 @@ function generatebrokercert() {
 
   keytool -keystore broker_certs/broker_keystore.jks -alias broker -importcert -file broker_certs/broker.crt -storepass changeit -noprompt
 
+  echo "changeit" > broker_certs/broker_keystore_cred.txt
+  echo "changeit" > broker_certs/broker_key_cred.txt
+  echo "changeit" > broker_certs/broker_truststore_cred.txt
 }
 
 function initdockerswarm() {

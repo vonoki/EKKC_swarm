@@ -28,10 +28,10 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_SECURITY_PROTOCOL: SSL
       KAFKA_SSL_KEYSTORE_FILENAME: broker_keystore.jks
-      KAFKA_SSL_KEYSTORE_CREDENTIALS: "changeit"
-      KAFKA_SSL_KEY_CREDENTIALS: "changeit"
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: broker_keystore_cred.txt
+      KAFKA_SSL_KEY_CREDENTIALS: broker_key_cred.txt
       KAFKA_SSL_TRUSTSTORE_FILENAME: /home/appuser/broker_truststore.jks
-      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: "changeit"
+      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: broker_truststore_cred.txt
       #KAFKA_MESSAGE_MAX_BYTES: 400000000
       #KAFKA_SOCKET_REQUEST_MAX_BYTES: 400001200
     depends_on:
