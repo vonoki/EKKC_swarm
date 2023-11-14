@@ -263,6 +263,10 @@ function install() {
   generatebrokercert
   sudo chmod -R a=rwx /opt/EKK/broker_certs
   sudo chmod -R a=rwx /opt/EKK/broker_data
+  mkdir zoo_data
+  mkdir zoo_log
+  sudo chmod -R a=rwx /opt/EKK/zoo_data
+  sudo chmod -R a=rwx /opt/EKK/zoo_log
 
   initdockerswarm
   populatecerts
