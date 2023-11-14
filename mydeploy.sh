@@ -87,6 +87,10 @@ function generateconnectcert() {
   openssl pkcs12 -export -out connect_certs/connect.p12 -in connect_certs/connect.crt -inkey connect_certs/connect.key
 
   keytool -destkeystore connect_certs/connect.keystore.jks -importkeystore -srckeystore connect_certs/connect.p12 -srcstoretype PKCS12
+
+  echo "changeit" > connect_certs/connect_keystore_cred.txt
+  echo "changeit" > connect_certs/connect_key_cred.txt
+  echo "changeit" > connect_certs/connect_truststore_cred.txt
 }
 
 function generatebrokercert() {
