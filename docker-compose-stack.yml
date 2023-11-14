@@ -67,18 +67,17 @@ services:
       CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
       CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
       # CONNECT_KEY_CONVERTER: 'org.apache.kafka.connect.json.JsonConverter'
-      CONNECT_KEY_CONVERTER: 'org.apache.kafka.connect.storage.StringConverter'
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
       CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: 'false'
-      CONNECT_VALUE_CONVERTER: 'org.apache.kafka.connect.json.JsonConverter'
-      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: 'false'
+      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: false
       # CONNECT_INTERNAL_KEY_CONVERTER: 'org.apache.kafka.connect.json.JsonConverter'
-      CONNECT_INTERNAL_KEY_CONVERTER: 'org.apache.kafka.connect.storage.StringConverter'
-      CONNECT_INTERNAL_VALUE_CONVERTER: 'org.apache.kafka.connect.json.JsonConverter'
-      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: 'io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor'
-      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: 'io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor'
-      CONNECT_REST_ADVERTISED_HOST_NAME: 'connect'
+      CONNECT_INTERNAL_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
+      CONNECT_INTERNAL_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor
+      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: o.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor
+      CONNECT_REST_ADVERTISED_HOST_NAME: connect
       CONNECT_ZOOKEEPER_CONNECT: zookeeper:2181
-      # CONNECT_PLUGIN_PATH: /usr/share/java,/usr/share/confluent-hub-components
       CONNECT_PLUGIN_PATH: /connect-plugins
       CONNECT_LOG4J_ROOT_LOGLEVEL: INFO
       CONNECT_LOG4J_LOGGERS: org.reflections=ERROR
@@ -113,29 +112,29 @@ services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
     environment:
-      - cluster.name=hyphy
-      - node.name=es01
-      # - discovery.seed_hosts=es01
-      # - discovery.type=single-node
-      - cluster.initial_master_nodes=es01
-      - ELASTIC_PASSWORD=temp
-      - xpack.security.enabled=true
-      - xpack.security.http.ssl.enabled=true
-      - xpack.security.http.ssl.key=/usr/share/elasticsearch/config/certificates/elasticsearch.key
-      - xpack.security.http.ssl.certificate_authorities=/usr/share/elasticsearch/config/certificates/ca.crt
-      - xpack.security.http.ssl.certificate=/usr/share/elasticsearch/config/certificates/elasticsearch.crt
-      - xpack.security.http.ssl.supported_protocols=TLSv1.3,TLSv1.2
-      - xpack.security.transport.ssl.enabled=true
-      # - xpack.security.transport.ssl.verification_mode=certificate
-      - xpack.security.transport.ssl.certificate_authorities=/usr/share/elasticsearch/config/certificates/ca.crt
-      - xpack.security.transport.ssl.certificate=/usr/share/elasticsearch/config/certificates/elasticsearch.crt
-      - xpack.security.transport.ssl.key=/usr/share/elasticsearch/config/certificates/elasticsearch.key
-      - xpack.security.transport.ssl.supported_protocols=TLSv1.3,TLSv1.2
-      #- xpack.monitoring.enabled=false
-      - xpack.security.authc.api_key.enabled=true
-      - path.repo=/usr/share/elasticsearch/data,/usr/share/elasticsearch/backups
-      - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms2g -Xmx2g -Des.enforce.bootstrap.checks=true"
+      cluster.name: hyphy
+      node.name: es01
+      # discovery.seed_hosts: es01
+      # discovery.type: single-node
+      cluster.initial_master_nodes: es01
+      ELASTIC_PASSWORD: temp
+      xpack.security.enabled: true
+      xpack.security.http.ssl.enabled: true
+      xpack.security.http.ssl.key: /usr/share/elasticsearch/config/certificates/elasticsearch.key
+      xpack.security.http.ssl.certificate_authorities: /usr/share/elasticsearch/config/certificates/ca.crt
+      xpack.security.http.ssl.certificate: /usr/share/elasticsearch/config/certificates/elasticsearch.crt
+      xpack.security.http.ssl.supported_protocols: TLSv1.3,TLSv1.2
+      xpack.security.transport.ssl.enabled: true
+      # xpack.security.transport.ssl.verification_mode=certificate
+      xpack.security.transport.ssl.certificate_authorities: /usr/share/elasticsearch/config/certificates/ca.crt
+      xpack.security.transport.ssl.certificate: /usr/share/elasticsearch/config/certificates/elasticsearch.crt
+      xpack.security.transport.ssl.key: /usr/share/elasticsearch/config/certificates/elasticsearch.key
+      xpack.security.transport.ssl.supported_protocols: TLSv1.3,TLSv1.2
+      # xpack.monitoring.enabled=false
+      xpack.security.authc.api_key.enabled: true
+      path.repo: /usr/share/elasticsearch/data,/usr/share/elasticsearch/backups
+      bootstrap.memory_lock: true
+      ES_JAVA_OPTS: -Xms2g -Xmx2g -Des.enforce.bootstrap.checks=true
     command: /bin/bash -c "cp -r /run/secrets /usr/share/elasticsearch/config/certificates && /usr/local/bin/docker-entrypoint.sh eswrapper"
     volumes:
       - type: volume
