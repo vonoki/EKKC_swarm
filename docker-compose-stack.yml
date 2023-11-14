@@ -63,6 +63,7 @@ services:
 
   kafka-connect:
     image: confluentinc/cp-kafka-connect:7.5.1
+    hostname: kafka-connect
     environment:
       CONNECT_BOOTSTRAP_SERVERS: broker:9092
       CONNECT_REST_PORT: 8083
@@ -119,6 +120,7 @@ services:
     
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
+    hostname: elasticsearch
     environment:
       cluster.name: hyphy
       node.name: es01
@@ -178,6 +180,7 @@ services:
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.10.2
+    hostname: kibana
     environment:
       SERVER_NAME: kibana
       ELASTICSEARCH_HOSTS: https://elasticsearch:9200
