@@ -24,13 +24,14 @@ services:
   broker:
     image: confluentinc/cp-kafka:7.5.1
     hostname: broker
+    restart: always
     environment:
       KAFKA_BROKER_ID: 1
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,SSL://0.0.0.0:29093,BROKER://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:29092,SSL://localhost:29093,BROKER://broker:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,SSL:SSL,BROKER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: BROKER
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENERS: ISSL://broker:9092,PLAIN_HOST://0.0.0.0:29092
-      KAFKA_ADVERTISED_LISTENERS: ISSL://broker:9092,PLAIN_HOST://localhost:29092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: ISSL:SSL,PLAIN_HOST:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: ISSL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
@@ -57,8 +58,8 @@ services:
         source: /opt/EKK/broker_data
         target: /var/lib/kafka/data
     ports:
-      - 9092:9092
       - 29092:29092
+      - 29093:29093
 
 
   kafka-connect:
