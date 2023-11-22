@@ -91,6 +91,7 @@ services:
       CONNECT_LOG4J_ROOT_LOGLEVEL: INFO
       CONNECT_LOG4J_LOGGERS: org.reflections=ERROR
       CLASSPATH: /usr/share/java/monitoring-interceptors/monitoring-interceptors-3.3.0.jar
+      CONNECT_CONNECTIONS_MAX_IDLE_MS: 5400000
       CONNECT_PLUGIN_PATH: /connect-plugins
       CONNECT_SECURITY_PROTOCOL: SSL
       CONNECT_SSL_KEYSTORE_LOCATION: /connect_certs/connect.keystore.jks
