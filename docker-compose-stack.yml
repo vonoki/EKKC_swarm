@@ -23,12 +23,11 @@ services:
 
   broker:
     image: confluentinc/cp-kafka:7.5.1
-    #hostname: broker
+    hostname: broker
     environment:
-      HOSTNAME_COMMAND: "docker info -f '{{`{{.Swarm.NodeAddr}}`}}'"
       KAFKA_BROKER_ID: 1
       KAFKA_LISTENERS: INSIDE://:9092,OUTSIDE://:29092
-      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092, OUTSIDE://_{HOSTNAME_COMMAND}:29092
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092, OUTSIDE://broker:29092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:SSL
       KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -59,16 +58,13 @@ services:
         target: /etc/kafka/secrets
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
-      - target: 29092
-        published: 29092
-        protocol: tcp
-        mode: host
+      - 29092:29092
 
   kafka-connect:
     image: confluentinc/cp-kafka-connect:7.5.1
     hostname: kafka-connect
     environment:
-      CONNECT_BOOTSTRAP_SERVERS: _{HOSTNAME_COMMAND}:29092
+      CONNECT_BOOTSTRAP_SERVERS: broker:29092
       CONNECT_REST_PORT: 8083
       CONNECT_GROUP_ID: 'connect'
       CONNECT_CONFIG_STORAGE_TOPIC: connect-config
