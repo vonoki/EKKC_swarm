@@ -257,17 +257,17 @@ function install() {
   generateCA
   generateelasticcert
   generatekibanacert
-  sudo chmod -R 1000:1000 /opt/EKK/certs
+  sudo chown -hR 1000 /opt/EKK/certs
   generateconnectcert
-  sudo chmod -R 1000:1000 /opt/EKK/connect_certs
+  sudo chown -hR 1000 /opt/EKK/connect_certs
   generatebrokercert
-  sudo chmod -R 1000:1000 /opt/EKK/broker_certs
+  sudo chown -hR 1000 /opt/EKK/broker_certs
   mkdir -p broker_data
-  sudo chmod -R 1000:1000 /opt/EKK/broker_data
+  sudo chown -hR 1000 /opt/EKK/broker_data
   mkdir -p zoo_data
   mkdir -p zoo_log
-  sudo chmod -R 1000:1000 /opt/EKK/zoo_data
-  sudo chmod -R 1000:1000 /opt/EKK/zoo_log
+  sudo chown -hR 1000 /opt/EKK/zoo_data
+  sudo chown -hR 1000 /opt/EKK/zoo_log
 
   initdockerswarm
   populatecerts
