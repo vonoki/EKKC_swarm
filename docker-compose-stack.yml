@@ -26,8 +26,8 @@ services:
     hostname: broker
     environment:
       KAFKA_BROKER_ID: 1
-      KAFKA_LISTENERS: PLAINTEXT://broker:29092,SSL://broker:9092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,SSL://broker:9092
+      KAFKA_LISTENERS: PLAINTEXT://broker:9092,SSL://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:9092,SSL://broker:29092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,SSL:SSL
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -58,7 +58,6 @@ services:
         target: /etc/kafka/secrets
     ports:
       - 29092:29092
-      - 9092:9092
 
 
   kafka-connect:
