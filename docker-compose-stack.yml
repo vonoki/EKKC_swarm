@@ -13,11 +13,11 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
     volumes:
-      - type: bind
-        source: /opt/EKK/zoo_data
+      - type: volume
+        source: zoo_data
         target: /var/lib/zookeeper/data
-      - type: bind
-        source: /opt/EKK/zoo_log
+      - type: volume
+        source: zoo_log
         target: /var/lib/zookeeper/log
     
 
@@ -26,8 +26,8 @@ services:
     hostname: broker
     environment:
       KAFKA_BROKER_ID: 1
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,SSL://0.0.0.0:9092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:29092,SSL://broker:9092
+      KAFKA_LISTENERS: PLAINTEXT://broker:29092,SSL://broker:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,SSL://broker:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,SSL:SSL
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -50,12 +50,12 @@ services:
     networks:
       - esnet
     volumes:
-      - type: bind
-        source: /opt/EKK/broker_certs
-        target: /etc/kafka/secrets
-      - type: bind
-        source: /opt/EKK/broker_data
+      - type: volume
+        source: broker_data
         target: /var/lib/kafka/data
+      - type: volume
+        source: broker_certs
+        target: /etc/kafka/secrets
     ports:
       - 29092:29092
       - 9092:9092
@@ -232,6 +232,19 @@ secrets:
 volumes:
   esdata:
     driver: local
+  broker_data:
+    external: true
+    name: broker_data
+  broker_certs:
+    external: true
+    name: broker_certs
+  zoo_data:
+    external: true
+    name: zoo_data
+  zoo_log:
+    external: true
+    name: zoo_log  
+  
 
 networks:
   esnet:
