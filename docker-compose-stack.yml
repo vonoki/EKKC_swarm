@@ -27,10 +27,10 @@ services:
     environment:
       HOSTNAME_COMMAND: "docker info -f '{{`{{.Swarm.NodeAddr}}`}}'"
       KAFKA_BROKER_ID: 1
-      KAFKA_LISTENERS: PLAINTEXT://broker:9092,SSL://0.0.0.0:29092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:9092,SSL://_{HOSTNAME_COMMAND}:29092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,SSL:SSL
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_LISTENERS: INSIDE://:9092,OUTSIDE://:29092
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092, OUTSIDE://_{HOSTNAME_COMMAND}:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:SSL
+      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
@@ -57,6 +57,7 @@ services:
       - type: bind
         source: /opt/EKK/broker_certs
         target: /etc/kafka/secrets
+      - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - target: 29092
         published: 29092
