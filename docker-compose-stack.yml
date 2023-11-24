@@ -234,16 +234,12 @@ volumes:
     driver: local
   broker_data:
     external: true
-    name: broker_data
   broker_certs:
     external: true
-    name: broker_certs
   zoo_data:
     external: true
-    name: zoo_data
   zoo_log:
     external: true
-    name: zoo_log  
   
 
 networks:
